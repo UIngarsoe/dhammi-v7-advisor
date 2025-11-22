@@ -65,33 +65,7 @@ def get_gemini_client():
         return None
 
 # -------------------------
-# 2. CTTM Ledger Functions (RAG & Write Logic)
-# -------------------------
-
-@st.cache_data(ttl=600)
-def load_cttm_facts():
-    """Reads the CTTM Ground Truth Ledger from Google Sheets."""
-    try:
-        # IMPORTANT: Ensure 'gsheets' connection secret is configured
-        conn = st.connection("gsheets", type=gsheetsconnection)
-        df = conn.read(worksheet="cttm_facts", usecols=[0, 1, 2, 3, 4], ttl=5)
-        if df is None or df.empty:
-            return pd.DataFrame()
-        # Ensure column names are lowercased as per Streamlit GSheets convention
-        df.columns = [col.lower().replace(' ', '_') for col in df.columns]
-        df = df.dropna(subset=['fact_text'])
-        if "confidence" in df.columns:
-            df['confidence'] = pd.to_numeric(df['confidence'], errors='coerce').fillna(0.0)
-        else:
-            df['confidence'] = 0.0
-        df = df.sort_values(by='confidence', ascending=False)
-        return df
-    except Exception as e:
-        print(f"RAG Warning: {e}") 
-        return pd.DataFrame()
-
-# -------------------------
-# 3. CTTM Data Input Dashboard
+# 2. CTTM Data Input Dashboard
 # -------------------------
 
 def cttm_input_dashboard():
@@ -137,7 +111,7 @@ def cttm_input_dashboard():
                     st.error(f"🚨 Submission Failed. Check GSheets secrets: {e}")
 
 # -------------------------
-# 4. GEMINI CHAT ENGINE (dhammi_chat)
+# 3. GEMINI CHAT ENGINE (dhammi_chat)
 # -------------------------
 
 def dhammi_chat(prompt: str, history: list):
@@ -146,14 +120,14 @@ def dhammi_chat(prompt: str, history: list):
     if client is None:
         return "🚨 Gemini client not configured."
 
-    # 4.1 Deontological Firewall (Sīla)
+    # 3.1 Deontological Firewall (Sīla)
     vetted_prompt = prompt.lower()
     veto_phrases = ["kill", "attack", "harm", "manipulate", "bomb", "destroy", "illegal"]
     if any(phrase in vetted_prompt for phrase in veto_phrases):
         return ("**⛔ Sīla Veto:** DHAMMI V7's core ethical mandate (**Ahiṃsā**) prevents "
                 "me from responding to requests that involve violence or illegal activity.")
 
-    # 4.2 RAG (Paññā) - Incorporating CTTM Ledger and the spirit of RSS feeds
+    # 3.2 RAG (Paññā) - Incorporating CTTM Ledger and the spirit of RSS feeds
     cttm_df = load_cttm_facts()
     final_user_prompt = prompt
     
@@ -182,7 +156,7 @@ def dhammi_chat(prompt: str, history: list):
     final_user_prompt = f"{context_str}\n\n### User Question:\n{prompt}\n\n(Use the provided context to inform your answer, especially the Current Context Layer and CTTM Ledger.)"
 
 
-    # 4.3 Prepare messages for Gemini
+    # 3.3 Prepare messages for Gemini
     api_messages = []
     messages_to_process = history if history and history[-1]["role"] == "assistant" else history[:-1]
 
@@ -199,7 +173,7 @@ def dhammi_chat(prompt: str, history: list):
     api_messages.append(types.Content(role="user", parts=[types.Part(text=final_user_prompt)]))
 
 
-    # 4.4 Call Gemini 
+    # 3.4 Call Gemini 
     try:
         response = client.models.generate_content(
             model=MODEL_NAME,
@@ -216,7 +190,7 @@ def dhammi_chat(prompt: str, history: list):
 
 
 # -------------------------
-# 5. MAIN STREAMLIT APPLICATION
+# 4. MAIN STREAMLIT APPLICATION
 # -------------------------
 
 def main():
