@@ -2,6 +2,9 @@ import streamlit as st
 import google.genai as genai
 import os
 import pandas as pd # 👈 Necessary for reading the CTTM Ledger via CSV link
+[connections.gsheets]
+spreadsheet = "1eXm3ezKutlnbc0qDBrjnwGtrXrHfr44TNOROJ6X3PSo"
+# ... include client_email and private_key below this line
 
 # =========================================================
 # 1. SS'ISM V7 CONFIGURATION & SECRETS
