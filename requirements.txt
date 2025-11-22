@@ -1,0 +1,6 @@
+requirements.txt | streamlit
+google-genai
+streamlit-gsheets
+pandas |
+
+
